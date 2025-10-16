@@ -10,10 +10,9 @@
   :group 'applications
   :prefix "rtn-")
 
-(defcustom rtn-annotation-face
+(defface rtn-annotation-face
   '((t (:background "#fff3cd" :foreground "#333333")))
   "Face for annotation overlays."
-  :type 'face
   :group 'rtn)
 
 (defcustom rtn-popup-width 50
@@ -87,7 +86,6 @@
 			(when content
 			  (let ((truncated (truncate-string-to-width content 80 0 nil "...")))
 				(message "%s" truncated))))
-		;; Clear message when not on annotation (but don't interfere with other commands)
 		(unless (memq this-command '(rtn--show-note-on-hover
 									 keyboard-quit
 									 minibuffer-keyboard-quit))
@@ -102,7 +100,7 @@
   (remove-hook 'post-command-hook #'rtn--show-note-on-hover t)
   (message ""))
 
-;;;; Display & Overlays (FIXED: use ov for stable positioning)
+;;;; Display & Overlays
 (defun rtn-display-annotations ()
   "Display all annotations in current file."
   (let ((file (rtn-file)))
@@ -114,7 +112,7 @@
 				 (end-pos (nth 1 note))
 				 (content (nth 2 note))
 				 (ov (ov pos end-pos
-						 'face 'rtn-annotation-face
+						 'face 'rtn-annotation-face  ;; ✅ 现在这是有效的 face symbol
 						 'rtn-content content
 						 'evaporate nil
 						 'modification-hooks '(rtn-overlay-modified)
@@ -161,7 +159,7 @@
 		  (rtn-clear-overlays file)
 		  (message "✅ Annotations hidden"))))))
 
-;;;; Add/Edit Annotation (UNCHANGED)
+;;;; Add/Edit Annotation
 ;;;###autoload
 (defun rtn-add-edit ()
   "Add or edit annotation at point."
@@ -235,13 +233,7 @@
 
 ;;;###autoload
 (defun rtn-clear-buffer ()
-  "Clear all annotations for the current buffer's file (DB + overlays).
-Ask for confirmation. Uses your project's APIs exactly:
-  - rtn-file
-  - rtn-delete-file-db
-  - rtn-clear-overlays
-  - rtn-display-annotations
-If some API is missing, uses safe fallbacks but warns."
+  "Clear all annotations for the current buffer's file."
   (interactive)
   (let ((file (rtn-file)))
 	(if (not file)
@@ -249,22 +241,18 @@ If some API is missing, uses safe fallbacks but warns."
 	  (when (yes-or-no-p
 			 (format "🧹 Are you sure you want to delete all annotations for %s? "
 					 (file-name-nondirectory file)))
-		;; 1) delete from DB using canonical name rtn-delete-file-db if present
 		(if (fboundp 'rtn-delete-file-db)
 			(progn
 			  (condition-case err
 				  (progn
 					(rtn-delete-file-db file)
-					;; 2) clear overlays in-memory if routine exists
 					(when (fboundp 'rtn-clear-overlays)
 					  (rtn-clear-overlays file))
-					;; 3) refresh display in this buffer if function exists
 					(when (fboundp 'rtn-display-annotations)
 					  (rtn-display-annotations))
 					(message "✅ Deleted and cleared all annotations for %s."
 							 (file-name-nondirectory file)))
 				(error (message "❌ Error during deletion: %S" err))))
-		  ;; fallback: delete each annotation entry if rtn-get-file + rtn-delete-db exist
 		  (if (and (fboundp 'rtn-get-file) (fboundp 'rtn-delete-db))
 			  (progn
 				(let ((notes (rtn-get-file file)))
@@ -277,20 +265,12 @@ If some API is missing, uses safe fallbacks but warns."
 				  (rtn-display-annotations))
 				(message "✅ Deleted and cleared annotations for %s using fallback."
 						 (file-name-nondirectory file)))
-			(message "❌ Cannot delete: missing DB interface (expected rtn-delete-file-db or rtn-get-file/rtn-delete-db)")))))))
+			(message "❌ Cannot delete: missing DB interface")))))))
 
 ;;;###autoload
 (defun rtn-clear-file ()
-  "Prompt user to pick a file among files that actually have annotations (from DB),
-then delete that file's annotations from DB. If the file's buffer is open, also clear overlays and refresh.
-Uses these APIs from your project:
-  - rtn-get-all-files  (returns list of file paths)
-  - rtn-delete-file-db
-  - rtn-clear-overlays
-  - rtn-display-annotations
-The prompt shows abbreviated paths for readability."
+  "Prompt user to pick a file and clear its annotations."
   (interactive)
-  ;; sanity: require DB listing function
   (if (not (fboundp 'rtn-get-all-files))
 	  (user-error "❌ Database missing rtn-get-all-files interface")
 	(let* ((all (rtn-get-all-files))
@@ -298,7 +278,7 @@ The prompt shows abbreviated paths for readability."
 	  (if (null files)
 		  (message "⚠️ No files with annotations in database.")
 		(let* ((cands (mapcar #'abbreviate-file-name files))
-			   (alist (cl-pairlis cands files))  ; display -> abs
+			   (alist (cl-pairlis cands files))
 			   (choice (completing-read "🧹 Select file to clear annotations: " cands nil t)))
 		  (let ((abs (or (alist-get choice alist nil nil #'string=)
 						 (and (stringp choice) (expand-file-name choice)))))
@@ -306,12 +286,10 @@ The prompt shows abbreviated paths for readability."
 			  (user-error "⚠️ Selected file is invalid: %s" choice))
 			(when (yes-or-no-p (format "🧹 Are you sure you want to delete all annotations for %s? "
 									   (file-name-nondirectory abs)))
-			  ;; delete
 			  (if (fboundp 'rtn-delete-file-db)
 				  (condition-case err
 					  (progn
 						(rtn-delete-file-db abs)
-						;; if buffer open, clear overlays and refresh
 						(let ((buf (get-file-buffer abs)))
 						  (when buf
 							(with-current-buffer buf
@@ -321,7 +299,6 @@ The prompt shows abbreviated paths for readability."
 								(rtn-display-annotations)))))
 						(message "✅ Deleted and cleared: %s" (file-name-nondirectory abs)))
 					(error (message "❌ Error during deletion: %S" err)))
-				;; fallback: iterate removal
 				(if (and (fboundp 'rtn-get-file) (fboundp 'rtn-delete-db))
 					(progn
 					  (let ((notes (rtn-get-file abs)))
@@ -336,8 +313,7 @@ The prompt shows abbreviated paths for readability."
 							(when (fboundp 'rtn-display-annotations)
 							  (rtn-display-annotations)))))
 					  (message "✅ Deleted and cleared using fallback: %s" (file-name-nondirectory abs)))
-				  (message "❌ Cannot delete: missing rtn-delete-file-db or rtn-get-file/rtn-delete-db"))))))))))
-
+				  (message "❌ Cannot delete: missing rtn-delete-file-db"))))))))))
 
 ;;;; Major Modes
 (define-derived-mode rtn-edit-mode text-mode "RTN-Edit"

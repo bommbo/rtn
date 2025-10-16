@@ -52,6 +52,7 @@ RTN (Rich Text Notes) is a robust toy project that allows you to add persistent,
 ### Reference and Clone
 - `rtn-copy-position`
 - `rtn-paste-reference`
+- `rtn-ref-jump-to-target`
 - `rtn-copy-anno-text`
 - `rtn-paste-anno-as-marker`
 
