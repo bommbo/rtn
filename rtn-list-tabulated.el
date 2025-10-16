@@ -375,13 +375,13 @@ Examples:
 
 ;;;###autoload
 (defun rtn-list-tabulated ()
-  "List all RTN annotations, replacing current list buffer."
+  "List all RTN annotations in a split window."
   (interactive)
   (let ((buf (get-buffer-create "*RTN List*")))
 	(with-current-buffer buf
 	  (rtn-tabulated-mode)
 	  (rtn-tabulated-refresh))
-	(switch-to-buffer buf)))
+	(pop-to-buffer buf)))
 
 ;;;###autoload
 (defun rtn-search-tabulated (term)
