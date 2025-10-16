@@ -114,5 +114,122 @@
 		  (rtn-display-annotations)
 		  (message "✅ Pasted marker: %s" (truncate-string-to-width content 50 nil nil "...")))))))
 
+(defvar rtn-move-clipboard nil
+  "Clipboard for moving annotations: (file . pos)")
+
+;;;###autoload
+(defun rtn-move-annotation ()
+  "Copy current annotation for moving (like cut)."
+  (interactive)
+  (let ((file (rtn-file)))
+	(if (not file)
+		(message "⚠️ Not in a saved buffer")
+	  (let* ((anno (rtn-extra-get-annotation file (point)))
+			 (pos  (if anno (nth 0 anno) (point))))
+		(if (null anno)
+			(message "❌ Not on an annotation")
+		  (setq rtn-move-clipboard (cons file pos))
+		  (message "✂️ Cut annotation: %s:%d" (file-name-nondirectory file) pos))))))
+
+;;;###autoload
+(defun rtn-paste-moved-annotation ()
+  "Paste moved annotation at point, deleting original and updating all references."
+  (interactive)
+  (if (not rtn-move-clipboard)
+	  (message "⚠️ Nothing cut (use C-c n m to cut)")
+	(let ((target-file (rtn-file)))
+	  (if (not target-file)
+		  (message "⚠️ Not in a saved buffer")
+		(let* ((orig-file (car rtn-move-clipboard))
+			   (orig-pos  (cdr rtn-move-clipboard))
+			   (orig-anno (rtn-extra-get-annotation orig-file orig-pos)))
+		  (if (null orig-anno)
+			  (message "❌ Original annotation no longer exists")
+			(rtn-delete-db orig-file orig-pos)
+
+			(let* ((content (nth 2 orig-anno))
+				   (icon    (or (nth 3 orig-anno) "📝"))
+				   (new-pos (point)))
+			  (rtn-extra-add-db target-file new-pos (+ 2 new-pos) content icon)
+			  (rtn-display-annotations)
+
+			  (rtn-update-all-references orig-file orig-pos target-file new-pos)
+
+			  (message "✅ Moved annotation and updated %d references"
+					   (rtn-count-references orig-file orig-pos))
+
+			  (setq rtn-move-clipboard nil))))))))
+
+(defun rtn-count-references (target-file target-pos)
+  "Count how many references point to TARGET-FILE:TARGET-POS."
+  (let ((count 0))
+	(dolist (ref-file (rtn-get-all-files))
+	  (dolist (anno (rtn-get-file ref-file))
+		(let ((content (nth 2 anno)))
+		  (when (and (string-match "@POS:\\([0-9]+\\)@" content)
+					 (string= (match-string 1 content) (number-to-string target-pos))
+					 (string-match (regexp-quote target-file) content))
+			(cl-incf count)))))
+	count))
+
+(defun rtn-update-all-references (orig-file orig-pos new-file new-pos)
+  "Update all references pointing to ORIG-FILE:ORIG-POS to NEW-FILE:NEW-POS."
+  (dolist (ref-file (rtn-get-all-files))
+	(let ((annos (rtn-get-file ref-file)))
+	  (dolist (anno annos)
+		(let* ((ref-pos (nth 0 anno))
+			   (content (nth 2 anno))
+			   (icon    (nth 3 anno)))
+		  (when (and (string-match (format "@POS:%d@" orig-pos) content)
+					 (string-match (regexp-quote orig-file) content))
+			(let ((new-content
+				   (replace-regexp-in-string
+					(regexp-quote orig-file) new-file
+					(replace-regexp-in-string
+					 (format "@POS:%d@" orig-pos)
+					 (format "@POS:%d@" new-pos)
+					 content t t) t t)))
+			  (rtn-extra-update-db ref-file ref-pos new-content icon)
+			  ;; 如果当前 buffer 是 ref-file，刷新显示
+			  (when (equal (buffer-file-name) ref-file)
+				(rtn-display-annotations)))))))))
+
+;;;###autoload
+(defun rtn-copy-reference-with-target ()
+  "Copy reference annotation with its target intact."
+  (interactive)
+  (let* ((file (rtn-file))
+		 (pos  (point))
+		 (anno (rtn-extra-get-annotation file pos)))
+	(if (null anno)
+		(message "❌ Not on an annotation")
+	  (let ((content (nth 2 anno))
+			(icon    (or (nth 3 anno) "📝")))
+		(if (not (string-match "@POS:[0-9]+@" content))
+			(message "❌ Not a reference annotation")
+		  (setq rtn-clipboard (cons (cons file pos) icon))
+		  (message "✅ Copied reference: %s" (truncate-string-to-width content 50 nil nil "...")))))))
+
+;;;###autoload
+(defun rtn-paste-reference-with-target ()
+  "Paste reference that points to original target."
+  (interactive)
+  (if (not rtn-clipboard)
+	  (message "⚠️ Nothing copied")
+	(let ((target-file (rtn-file)))
+	  (if (not target-file)
+		  (message "⚠️ Not in a saved buffer")
+		(let* ((orig-file (car (car rtn-clipboard)))
+			   (orig-pos  (cdr (car rtn-clipboard)))
+			   (orig-anno (rtn-extra-get-annotation orig-file orig-pos)))
+		  (if (null orig-anno)
+			  (message "❌ Original annotation missing")
+			(let* ((content (nth 2 orig-anno))
+				   (icon    (or (nth 3 orig-anno) "📝")))
+			  (rtn-extra-add-db target-file (point) (+ 2 (point)) content icon)
+			  (rtn-display-annotations)
+			  (message "✅ Pasted reference to %s @POS:%d"
+					   (file-name-nondirectory orig-file) orig-pos))))))))
+
 (provide 'rtn-reference)
 ;;; rtn-reference.el ends here
