@@ -53,13 +53,13 @@ RTN (Rich Text Notes) is a robust toy project that allows you to add persistent,
 - `rtn-copy-position`
 - `rtn-paste-reference`
 - `rtn-ref-jump-to-target`
-
+---
 - `rtn-copy-anno-text`
 - `rtn-paste-anno-as-marker`
-
+---
 - `rtn-move-annotation`
 - `rtn-paste-moved-annotation`
-
+---
 - `rtn-copy-reference-with-target`
 - `rtn-paste-reference-with-target`
 
