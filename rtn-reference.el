@@ -4,7 +4,7 @@
 (require 'rtn-extra)
 
 (defvar rtn-clipboard nil
-  "剪贴板：((file . pos) . original-icon)")
+  "clipboard：((file . pos) . original-icon)")
 
 ;;;###autoload
 (defun rtn-copy-position ()
@@ -35,7 +35,7 @@
 			   (content     (format "%s %s @POS:%d@"
 									orig-icon (expand-file-name target-file) target-pos))
 			   (icon        "🔗"))
-		  (rtn-extra-add-db file current-pos (+ 2 current-pos) content icon)
+		  (rtn-extra-add-db file current-pos current-pos content icon)
 		  (rtn-display-annotations)
 		  (message "✅ Reference pasted: %s @POS:%d" target-file target-pos))))))
 
@@ -110,7 +110,7 @@
 			 (content (or (cadr parts) text)))
 		(if (not file)
 			(message "⚠️ Not in a saved buffer")
-		  (rtn-extra-add-db file pos (+ 2 pos) content icon)
+		  (rtn-extra-add-db file pos pos content icon)
 		  (rtn-display-annotations)
 		  (message "✅ Pasted marker: %s" (truncate-string-to-width content 50 nil nil "...")))))))
 
@@ -150,7 +150,7 @@
 			(let* ((content (nth 2 orig-anno))
 				   (icon    (or (nth 3 orig-anno) "📝"))
 				   (new-pos (point)))
-			  (rtn-extra-add-db target-file new-pos (+ 2 new-pos) content icon)
+			  (rtn-extra-add-db target-file new-pos new-pos content icon)
 			  (rtn-display-annotations)
 
 			  (rtn-update-all-references orig-file orig-pos target-file new-pos)
@@ -190,7 +190,6 @@
 					 (format "@POS:%d@" new-pos)
 					 content t t) t t)))
 			  (rtn-extra-update-db ref-file ref-pos new-content icon)
-			  ;; 如果当前 buffer 是 ref-file，刷新显示
 			  (when (equal (buffer-file-name) ref-file)
 				(rtn-display-annotations)))))))))
 
@@ -226,7 +225,7 @@
 			  (message "❌ Original annotation missing")
 			(let* ((content (nth 2 orig-anno))
 				   (icon    (or (nth 3 orig-anno) "📝")))
-			  (rtn-extra-add-db target-file (point) (+ 2 (point)) content icon)
+			  (rtn-extra-add-db target-file (point) (point) content icon)
 			  (rtn-display-annotations)
 			  (message "✅ Pasted reference to %s @POS:%d"
 					   (file-name-nondirectory orig-file) orig-pos))))))))

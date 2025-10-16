@@ -112,7 +112,7 @@
 				 (end-pos (nth 1 note))
 				 (content (nth 2 note))
 				 (ov (ov pos end-pos
-						 'face 'rtn-annotation-face  ;; ✅ 现在这是有效的 face symbol
+						 'face 'rtn-annotation-face
 						 'rtn-content content
 						 'evaporate nil
 						 'modification-hooks '(rtn-overlay-modified)
@@ -175,7 +175,7 @@
 		(setq rtn-edit-original-buffer (current-buffer))
 		(setq rtn-edit-file file)
 		(setq rtn-edit-pos pos)
-		(setq rtn-edit-end-pos (if annotation (nth 1 annotation) (1+ pos)))
+		(setq rtn-edit-end-pos (if annotation (nth 1 annotation) pos))
 		(split-window-right (- (window-width) rtn-popup-width))
 		(select-window (next-window))
 		(switch-to-buffer edit-buf)

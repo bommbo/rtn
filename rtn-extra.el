@@ -230,7 +230,7 @@
 		(setq rtn-edit-original-buffer (current-buffer))
 		(setq rtn-edit-file file)
 		(setq rtn-edit-pos pos)
-		(setq rtn-edit-end-pos (if annotation (nth 1 annotation) (1+ pos)))
+		(setq rtn-edit-end-pos (if annotation (nth 1 annotation) pos))
 		(setq rtn-edit-icon icon)
 		(split-window-right (- (window-width) rtn-popup-width))
 		(select-window (next-window))
