@@ -77,7 +77,7 @@ RTN (Rich Text Notes) is a robust toy project that allows you to add persistent,
 | rtn-rescue-delete-entry   | d   | Delete annotation     |
 | rtn-rescue-edit-file-path | e   | Rescue edit file path |
 | rtn-rescue-refresh        | g   | Refresh list          |
-| quit-window               | q   | Close lis             |
+| quit-window               | q   | Close list            |
 
 
 ## List Table Keybindings
