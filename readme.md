@@ -65,18 +65,29 @@ RTN (Rich Text Notes) is a robust toy project that allows you to add persistent,
 - `rtn-paste-reference-with-target`
 
 ### Migrate
-
 - `rtn-migrate-file`
 - `rtn-migrate-directory`
 
+### Rescue
+- `rtn-rescue-annotations`
+
+| Command                   | Key | Function              |
+|---------------------------|-----|-----------------------|
+| rtn-rescue-save-to-file   | RET | Rescue save to file   |
+| rtn-rescue-delete-entry   | d   | Delete annotation     |
+| rtn-rescue-edit-file-path | e   | Rescue edit file path |
+| rtn-rescue-refresh        | g   | Refresh list          |
+| quit-window               | q   | Close lis             |
+
+
 ## List Table Keybindings
 
-| Command                    | Key | Function                |
-|----------------------------|-----|-------------------------|
-| rtn-tabulated-jump         | RET | Jump to annotation      |
-| rtn-list-edit-annotation   | e   | Edit annotation         |
-| rtn-tabulated-delete       | d   | Delete annotation       |
-| rtn-tabulated-other-window | o   | Preview annotation      |
-| rtn-tabulated-filter       | /   | Search and filter       |
-| rtn-list-tabulated         | L   | Switch back to full list|
-|                            | q   | Close list              |
+| Command                    | Key | Function                 |
+|----------------------------|-----|--------------------------|
+| rtn-tabulated-jump         | RET | Jump to annotation       |
+| rtn-list-edit-annotation   | e   | Edit annotation          |
+| rtn-tabulated-delete       | d   | Delete annotation        |
+| rtn-tabulated-other-window | o   | Preview annotation       |
+| rtn-tabulated-filter       | /   | Search and filter        |
+| rtn-list-tabulated         | L   | Switch back to full list |
+| quit-window                | q   | Close list               |
