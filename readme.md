@@ -63,6 +63,11 @@ RTN (Rich Text Notes) is a robust toy project that allows you to add persistent,
 - `rtn-copy-reference-with-target`
 - `rtn-paste-reference-with-target`
 
+### Migrate
+
+- `rtn-migrate-file`
+- `rtn-migrate-directory`
+
 ## List Table Keybindings
 
 | Command                    | Key | Function                |
