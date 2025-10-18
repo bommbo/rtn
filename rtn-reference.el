@@ -155,6 +155,12 @@
 
 			  (rtn-update-all-references orig-file orig-pos target-file new-pos)
 
+			  (let ((orig-buffer (get-file-buffer orig-file)))
+				(when (and orig-buffer
+						   (not (equal orig-buffer (current-buffer))))
+				  (with-current-buffer orig-buffer
+					(rtn-display-annotations))))
+
 			  (message "✅ Moved annotation and updated %d references"
 					   (rtn-count-references orig-file orig-pos))
 
