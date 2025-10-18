@@ -31,6 +31,7 @@ RTN (Rich Text Notes) is a robust toy project that allows you to add persistent,
 (setq rtn-tabulated-max-content-lines 5)
 ;; (setq rtn-tabulated-max-content-lines nil)
 (require 'rtn-reference)
+(require 'rtn-migrate)
 (add-hook 'prog-mode-hook #'rtn-mode)
 (add-hook 'text-mode-hook #'rtn-mode)
 (rtn-mode 1)
