@@ -86,7 +86,7 @@ Example: \"bug fix && type:todo\" → ((\"bug\" \"fix\") (\"type:todo\"))"
   (let ((map (make-sparse-keymap)))
 	(set-keymap-parent map tabulated-list-mode-map)
 	(define-key map (kbd "RET") #'rtn-tabulated-jump)
-	(define-key map "e"         #'rtn-list-edit-annotation)  ; ← 新命令
+	(define-key map "e"         #'rtn-list-edit-annotation)
 	(define-key map "d"         #'rtn-tabulated-delete)
 	(define-key map "o"         #'rtn-tabulated-other-window)
 	(define-key map "g"         #'rtn-tabulated-refresh)
