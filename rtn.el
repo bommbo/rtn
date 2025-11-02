@@ -30,6 +30,18 @@
   :type 'boolean
   :group 'rtn)
 
+(defcustom rtn-auto-enable-modes nil
+	"List of major modes where RTN should auto-enable after the buffer is loaded.
+
+If nil, RTN will auto-enable for any file that has annotations recorded in
+the database.  Otherwise RTN will only auto-enable when the buffer's
+`major-mode' is derived from one of the symbols in this list.
+
+Example: '(prog-mode text-mode) will enable RTN for buffers whose
+major mode derives from `prog-mode' or `text-mode'."
+	:type '(repeat symbol)
+	:group 'rtn)
+
 ;;;; Variables
 (defvar rtn-annotations-overlays (make-hash-table :test 'equal)
   "Hash table storing annotation overlays by file.")
@@ -340,10 +352,15 @@
 
 (defun rtn--delayed-enable ()
   "Enable RTN after buffer is fully loaded."
-  (when (and (buffer-file-name)
-			 (not rtn-mode)
-			 (rtn-get-file (buffer-file-name)))
-	(rtn-mode 1)))
+	(when (and (buffer-file-name)
+						 (not rtn-mode)
+						 (rtn-get-file (buffer-file-name))
+						 ;; If `rtn-auto-enable-modes' is non-nil, only auto-enable
+						 ;; when the current buffer's major mode is derived from one
+						 ;; of the symbols in that list.
+						 (or (null rtn-auto-enable-modes)
+								 (cl-some (lambda (m) (derived-mode-p m)) rtn-auto-enable-modes)))
+		(rtn-mode 1)))
 
 (add-hook 'hack-local-variables-hook #'rtn--delayed-enable)
 (add-hook 'after-change-major-mode-hook #'rtn--delayed-enable)
