@@ -82,6 +82,22 @@ Example: \"bug fix && type:todo\" → ((\"bug\" \"fix\") (\"type:todo\"))"
 			   t  ; LITERAL: t = replace all occurrences
 			   ))))))
 
+(defun rtn-tabulated-show-help ()
+  "Show key bindings for RTN tabulated list mode."
+  (interactive)
+  (with-help-window "*RTN List Help*"
+    (with-current-buffer standard-output
+      (insert "RTN List Mode — Key Bindings\n\n")
+      (insert "`RET` : Go to annotation in its file\n")
+      (insert "`e`   : Edit annotation content\n")
+      (insert "`d`   : Delete annotation\n")
+      (insert "`o`   : preview annotation in other window\n")
+      (insert "`g`   : Refresh list\n")
+      (insert "`/`   : Filter annotations\n")
+      (insert "`L`   : Show all annotations\n")
+      (insert "`q`   : Quit window\n")
+      (insert "`?`   : Show this help\n"))))
+
 (defvar rtn-tabulated-mode-map
   (let ((map (make-sparse-keymap)))
 	(set-keymap-parent map tabulated-list-mode-map)
@@ -91,6 +107,7 @@ Example: \"bug fix && type:todo\" → ((\"bug\" \"fix\") (\"type:todo\"))"
 	(define-key map "o"         #'rtn-tabulated-other-window)
 	(define-key map "g"         #'rtn-tabulated-refresh)
 	(define-key map "/"         #'rtn-tabulated-filter)
+	(define-key map "?"         #'rtn-tabulated-show-help)
 	(define-key map "L"         #'rtn-list-tabulated)
 	map)
   "Keymap for `rtn-tabulated-mode'.")
