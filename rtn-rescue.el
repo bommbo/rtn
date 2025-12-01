@@ -69,28 +69,30 @@
 
 ;;;###autoload
 (defun rtn-rescue-edit-file-path ()
-  "Edit the file path of the selected dead annotation and attempt to restore it."
+  "Edit the file path of the selected dead annotation and restore it.
+If the target file doesn't exist, create it empty."
   (interactive)
   (let ((id (tabulated-list-get-id)))
-	(unless id (user-error "No annotation selected"))
-	(let* ((old-file (car id))
-		   (pos (cdr id))
-		   (anno (rtn-extra-get-annotation old-file pos)))
-	  (unless anno (user-error "Annotation not found"))
-	  (let* ((new-file (read-file-name "Edit file path: " old-file))
-			 (new-abs (expand-file-name new-file)))
-		(cond
-		 ((not (file-exists-p new-abs))
-		  (message "❌ Target file does not exist: %s" new-abs))
-		 (t
-		  (let ((content (nth 2 anno))
-				(icon (or (nth 3 anno) "📝"))
-				(new-size (rtn--file-size new-abs)))
-			(let ((new-pos (if (> pos new-size) new-size (max 1 pos))))
-			  (rtn-extra-add-db new-abs new-pos new-pos content icon))
-			(rtn-delete-db old-file pos)
-			(rtn-rescue-refresh)
-			(message "✅ Restored annotation to %s" new-abs))))))))
+    (unless id (user-error "No annotation selected"))
+    (let* ((old-file (car id))
+           (pos (cdr id))
+           (anno (rtn-extra-get-annotation old-file pos)))
+      (unless anno (user-error "Annotation not found"))
+      (let* ((new-file (read-file-name "Edit file path: " old-file))
+             (new-abs (expand-file-name new-file)))
+		
+        (unless (file-exists-p new-abs)
+          (make-empty-file new-abs)
+          (message "🆕 Created empty file: %s" new-abs))
+		
+        (let ((content (nth 2 anno))
+              (icon (or (nth 3 anno) "📝"))
+              (new-size (rtn--file-size new-abs)))
+          (let ((new-pos (if (> pos new-size) new-size (max 1 pos))))
+            (rtn-extra-add-db new-abs new-pos new-pos content icon))
+          (rtn-delete-db old-file pos)
+          (rtn-rescue-refresh)
+          (message "✅ Restored annotation to %s" new-abs))))))
 
 (defun rtn-rescue-refresh ()
   "Refresh the current RTN Rescue buffer."
@@ -112,6 +114,19 @@
 	  (setq tabulated-list-entries (nreverse entries))
 	  (tabulated-list-print))))
 
+(defun rtn-rescue-show-help ()
+  "Show brief help for RTN Rescue mode in a help buffer."
+  (interactive)
+  (with-help-window "*RTN Rescue Help*"
+    (with-current-buffer standard-output
+      (insert "RTN Rescue Mode — Key Bindings\n\n")
+      (insert "`RET`  : Save selected annotation to a new file\n")
+      (insert "`d`    : Delete selected annotation from database\n")
+      (insert "`e`    : Edit file path and restore annotation\n")
+      (insert "`g`    : Refresh the list\n")
+      (insert "`q`    : Quit window\n")
+      (insert "`?`    : Show this help\n"))))
+
 (define-derived-mode rtn-rescue-mode tabulated-list-mode "RTN-Rescue"
   "Major mode for rescuing dead RTN annotations."
   (setq tabulated-list-format [("Icon" 2 nil) ("File" 20 t) ("Pos" 6 nil) ("Content" 0 t)])
@@ -120,6 +135,7 @@
   (local-set-key "d"       #'rtn-rescue-delete-entry)
   (local-set-key "e"       #'rtn-rescue-edit-file-path)
   (local-set-key "g"       #'rtn-rescue-refresh)
+  (local-set-key "?"       #'rtn-rescue-show-help)
   (local-set-key "q"       #'quit-window))
 
 (provide 'rtn-rescue)
